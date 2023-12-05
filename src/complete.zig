@@ -3,7 +3,7 @@ pub const tag = @import("complete/tag.zig");
 pub const combinator = @import("complete/combinator.zig");
 
 test {
-    // _ = parser;
-    // _ = tag;
+    _ = parser;
+    _ = tag;
     _ = combinator;
 }
