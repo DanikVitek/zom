@@ -24,17 +24,12 @@ pub fn Tag(comptime Input: type) type {
         }
 
         pub fn parse(self: *const Self, input: Input) TagParser.ParseResult {
-            std.debug.print("len: {d} {d}\n", .{ input.len, self.tag.len });
-
             if (std.mem.startsWith(Item(Input), input, self.tag)) {
-                std.debug.print("hello\n", .{});
                 return .{ .ok = .{
                     .value = input[0..self.tag.len],
                     .rest = input[self.tag.len..],
                 } };
             }
-
-            std.debug.print("hell no\n", .{});
 
             return .{ .err = .{ .input = input, .err = ParseError.Tag } };
         }
