@@ -41,9 +41,9 @@ pub fn Value(comptime T: type, comptime U: type, comptime Input: type) type {
 const testing = std.testing;
 
 test "value 1 from \"one\"" {
-    const input = "one";
-
     const Tag = @import("../tag.zig").Tag;
+
+    const input = "one";
     var tag_parser = Tag(@TypeOf(input)).init("one");
     var value_parser = Value([]const u8, u8, @TypeOf(input)).init(1, tag_parser.parser);
     const result = value_parser.parse(input);
