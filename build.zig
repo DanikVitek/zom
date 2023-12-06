@@ -24,6 +24,12 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    const ziglyph = b.dependency("ziglyph", .{
+        .optimize = optimize,
+        .target = target,
+    });
+    lib.addModule("ziglyph", ziglyph.module("ziglyph"));
+
     // This declares intent for the library to be installed into the standard
     // location when the user invokes the "install" step (the default step when
     // running `zig build`).
@@ -36,7 +42,7 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-
+    main_tests.addModule("ziglyph", ziglyph.module("ziglyph"));
     const run_main_tests = b.addRunArtifact(main_tests);
 
     // This creates a build step. It will be visible in the `zig build --help` menu,
@@ -51,6 +57,8 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
+    main_bin.addModule("ziglyph", ziglyph.module("ziglyph"));
+
     const run_main_bin = b.addRunArtifact(main_bin);
     const run_step = b.step("run", "Run the main binary");
     run_step.dependOn(&run_main_bin.step);
