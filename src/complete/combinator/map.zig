@@ -194,7 +194,7 @@ test "map len from tag (*const fn)" {
     try testing.expectEqualStrings("", result.ok.rest);
 }
 
-test "map len-1 from tag (FnMut closure)" {
+test "map len from tag (FnMut closure)" {
     const Tag = @import("../tag.zig").Tag;
 
     const input = "one";
@@ -210,7 +210,7 @@ test "map len-1 from tag (FnMut closure)" {
     try testing.expectEqualStrings("", result.ok.rest);
 }
 
-test "map len-1 from tag (Fn closure)" {
+test "map len from tag (Fn closure)" {
     const Tag = @import("../tag.zig").Tag;
 
     const input = "one";
@@ -226,7 +226,7 @@ test "map len-1 from tag (Fn closure)" {
     try testing.expectEqualStrings("", result.ok.rest);
 }
 
-test "map len-1 from tag (FnOnce closure)" {
+test "map len from tag (FnOnce closure)" {
     const Tag = @import("../tag.zig").Tag;
 
     const input = "one";
