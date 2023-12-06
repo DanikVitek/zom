@@ -31,6 +31,48 @@ fn isValidClosure(comptime T: type, comptime Closure: type) bool {
 /// If `Mapper` is a function, the `init` constructor will take one argument, the parser to map from.
 /// If `Mapper` is a closure, the `init` constructor will take two arguments, the closure and the
 /// parser to map from.
+///
+/// # Examples
+/// ```zig
+/// const testing = @import("std").testing;
+/// const Tag = @import("../tag.zig").Tag;
+/// fn len(value: []const u8) usize {
+///     return value.len;
+/// }
+/// ```
+///
+/// - Mapping with a function:
+/// ```zig
+/// const input = "one";
+/// var tag_parser = Tag(@TypeOf(input)).init("one");
+/// var value_parser = Map([]const u8, len, @TypeOf(input)).init(&tag_parser.parser);
+/// const result = value_parser.parse(input);
+/// try testing.expectEqual(@as(usize, 3), result.ok.value);
+/// try testing.expectEqualStrings("", result.ok.rest);
+/// ```
+/// - Mapping with a function pointer
+/// ```zig
+/// const input = "one";
+/// var tag_parser = Tag(@TypeOf(input)).init("one");
+/// var value_parser = Map([]const u8, *const fn ([]const u8) usize, @TypeOf(input)).init(&len, &tag_parser.parser);
+/// const result = value_parser.parse(input);
+/// try testing.expectEqual(@as(usize, 3), result.ok.value);
+/// try testing.expectEqualStrings("", result.ok.rest);
+/// ```
+/// - Mapping with a closure
+/// ```zig
+/// const input = "one";
+/// var tag_parser = Tag(@TypeOf(input)).init("one");
+/// var value_parser = Map([]const u8, struct {
+///     pub fn call(self: @This(), value: []const u8) usize {
+///         _ = self;
+///         return value.len;
+///     }
+/// }, @TypeOf(input)).init(.{}, &tag_parser.parser);
+/// const result = value_parser.parse(input);
+/// try testing.expectEqual(@as(usize, 3), result.ok.value);
+/// try testing.expectEqualStrings("", result.ok.rest);
+/// ```
 pub fn Map(comptime T: type, comptime Mapper: anytype, comptime Input: type) type {
     switch (@typeInfo(@TypeOf(Mapper))) {
         .Type => switch (@typeInfo(Mapper)) {
@@ -81,17 +123,22 @@ pub fn Map(comptime T: type, comptime Mapper: anytype, comptime Input: type) typ
         else => @typeInfo(@TypeOf(@field(Mapper, "call"))).Fn.return_type.?,
     };
 
+    const StoredMapper = switch (@typeInfo(Mapper)) {
+        .Fn, .Pointer => Mapper,
+        else => @typeInfo(@TypeOf(@field(Mapper, "call"))).Fn.params[0].type.?,
+    };
+
     return struct {
         parser: Parser(U, Input) = .{
             ._parse = &_parse,
         },
-        mapper: Mapper,
+        mapper: StoredMapper,
         child_parser: *Parser(T, Input),
 
         const Self = @This();
         const MapCombinator = Parser(U, Input);
 
-        pub fn init(mapper: Mapper, child_parser: *Parser(T, Input)) Self {
+        pub fn init(mapper: StoredMapper, child_parser: *Parser(T, Input)) Self {
             return .{
                 .mapper = mapper,
                 .child_parser = child_parser,
@@ -114,7 +161,7 @@ pub fn Map(comptime T: type, comptime Mapper: anytype, comptime Input: type) typ
             };
         }
 
-        fn map(mapper: Mapper, value: T) U {
+        fn map(mapper: StoredMapper, value: T) U {
             return switch (@typeInfo(Mapper)) {
                 .Pointer => mapper(value),
                 else => mapper.call(value),
@@ -147,13 +194,45 @@ test "map len from tag (*const fn)" {
     try testing.expectEqualStrings("", result.ok.rest);
 }
 
-test "map len-1 from tag (closure)" {
+test "map len-1 from tag (FnMut closure)" {
+    const Tag = @import("../tag.zig").Tag;
+
+    const input = "one";
+    var tag_parser = Tag(@TypeOf(input)).init("one");
+    var value_parser = Map([]const u8, struct {
+        pub fn call(self: *@This(), value: []const u8) usize {
+            _ = self;
+            return value.len;
+        }
+    }, @TypeOf(input)).init(&.{}, &tag_parser.parser);
+    const result = value_parser.parse(input);
+    try testing.expectEqual(@as(usize, 3), result.ok.value);
+    try testing.expectEqualStrings("", result.ok.rest);
+}
+
+test "map len-1 from tag (Fn closure)" {
     const Tag = @import("../tag.zig").Tag;
 
     const input = "one";
     var tag_parser = Tag(@TypeOf(input)).init("one");
     var value_parser = Map([]const u8, struct {
         pub fn call(self: *const @This(), value: []const u8) usize {
+            _ = self;
+            return value.len;
+        }
+    }, @TypeOf(input)).init(&.{}, &tag_parser.parser);
+    const result = value_parser.parse(input);
+    try testing.expectEqual(@as(usize, 3), result.ok.value);
+    try testing.expectEqualStrings("", result.ok.rest);
+}
+
+test "map len-1 from tag (FnOnce closure)" {
+    const Tag = @import("../tag.zig").Tag;
+
+    const input = "one";
+    var tag_parser = Tag(@TypeOf(input)).init("one");
+    var value_parser = Map([]const u8, struct {
+        pub fn call(self: @This(), value: []const u8) usize {
             _ = self;
             return value.len;
         }
