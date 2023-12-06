@@ -16,8 +16,10 @@ fn isValidClosure(comptime T: type, comptime Closure: type) bool {
     } and Fn.params[1].type == T and Fn.return_type != null;
 }
 
-/// `Mapper` can be a function (`fn(T) U`), a function pointer (`*const fn(T) U`) or a closure.
-/// It it's a closure, it must have a public method named `call` that takes two arguments,
+/// - `T` is the type of an output of a child parser
+/// - `Input` is a type of the input (e.g. `[]const u8`)
+/// - `Mapper` can be a function (`fn(T) U`), a function pointer (`*const fn(T) U`) or a closure.
+/// If it's a closure, it must have a public method named `call` that takes two arguments,
 /// the first of which is of type `Self`, `*const Self`, or `*Self`, and the second of
 /// which is of type `T`, and returns a value of type `U`
 /// (where `U` is infered from the return type of the function):
