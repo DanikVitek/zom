@@ -61,7 +61,7 @@ fn isValidClosure(comptime T: type, comptime Closure: type) bool {
 /// try testing.expectEqual(@as(usize, 3), result.ok.value);
 /// try testing.expectEqualStrings("", result.ok.rest);
 /// ```
-/// - Mapping with a closure
+/// - Mapping with a closure (FnOnce)
 /// ```zig
 /// const input = "one";
 /// var tag_parser = Tag(@TypeOf(input)).init("one");
@@ -71,6 +71,34 @@ fn isValidClosure(comptime T: type, comptime Closure: type) bool {
 ///         return value.len;
 ///     }
 /// }, @TypeOf(input)).init(.{}, &tag_parser.parser);
+/// const result = value_parser.parse(input);
+/// try testing.expectEqual(@as(usize, 3), result.ok.value);
+/// try testing.expectEqualStrings("", result.ok.rest);
+/// ```
+/// - Mapping with a closure (Fn)
+/// ```zig
+/// const input = "one";
+/// var tag_parser = Tag(@TypeOf(input)).init("one");
+/// var value_parser = Map([]const u8, struct {
+///     pub fn call(self: *const @This(), value: []const u8) usize {
+///         _ = self;
+///         return value.len;
+///     }
+/// }, @TypeOf(input)).init(&.{}, &tag_parser.parser);
+/// const result = value_parser.parse(input);
+/// try testing.expectEqual(@as(usize, 3), result.ok.value);
+/// try testing.expectEqualStrings("", result.ok.rest);
+/// ```
+/// - Mapping with a closure (FnMut)
+/// ```zig
+/// const input = "one";
+/// var tag_parser = Tag(@TypeOf(input)).init("one");
+/// var value_parser = Map([]const u8, struct {
+///     pub fn call(self: *@This(), value: []const u8) usize {
+///         _ = self;
+///         return value.len;
+///     }
+/// }, @TypeOf(input)).init(&.{}, &tag_parser.parser);
 /// const result = value_parser.parse(input);
 /// try testing.expectEqual(@as(usize, 3), result.ok.value);
 /// try testing.expectEqualStrings("", result.ok.rest);
