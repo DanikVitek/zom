@@ -100,6 +100,16 @@ test "tag \"abc\" from \"ab\"" {
     try testing.expectEqual(ParseError.Tag, result.err);
 }
 
+test "tag no case \"abc\" from \"aBcde\"" {
+    const input = "aBcde";
+    const parser = TagNoCase.init("abc");
+    const result = parser.parse(input).ok;
+    try testing.expectEqualStrings("aBc", result.value);
+    try testing.expectEqualStrings("de", result.rest);
+    try testing.expectEqual(@intFromPtr(input), @intFromPtr(result.value.ptr));
+    try testing.expectEqual(@intFromPtr(input) + 3, @intFromPtr(result.rest.ptr));
+}
+
 test "tag no case \"abc\" from \"abcde\"" {
     const input = "abcde";
     const parser = TagNoCase.init("abc");
@@ -108,6 +118,16 @@ test "tag no case \"abc\" from \"abcde\"" {
     try testing.expectEqualStrings("de", result.rest);
     try testing.expectEqual(@intFromPtr(input), @intFromPtr(result.value.ptr));
     try testing.expectEqual(@intFromPtr(input) + 3, @intFromPtr(result.rest.ptr));
+}
+
+test "tag no case \"абвгґ\" from \"аБвГґде\"" {
+    const input = "аБвГґде";
+    const parser = TagNoCase.init("абвгґ");
+    const result = parser.parse(input).ok;
+    try testing.expectEqualStrings("аБвГґ", result.value);
+    try testing.expectEqualStrings("де", result.rest);
+    try testing.expectEqual(@intFromPtr(input), @intFromPtr(result.value.ptr));
+    try testing.expectEqual(@intFromPtr(input) + 10, @intFromPtr(result.rest.ptr));
 }
 
 test "tag no case \"абвгґ\" from \"абвгґде\"" {
